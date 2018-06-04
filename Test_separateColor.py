@@ -7,12 +7,7 @@
 import cv2
 import numpy as np
 
-from matplotlib import pyplot as plt
-img = cv2.imread('image5.png')
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-img_ = img.copy()
-plt.subplot(1,1,1), plt.imshow(gray, 'gray')
-plt.show()
+# from matplotlib import pyplot as plt
 
 
 # In[93]:
@@ -58,7 +53,6 @@ def findEdge(img):
     max_line_gap = 10
     lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]), min_line_length, max_line_gap)
     if hasattr(lines, "__len__") == False:
-#     if (lines == None):
         return
     img2 = img_.copy()
     print len(lines)
@@ -70,21 +64,9 @@ def findEdge(img):
     plt.show()
 
 
-# In[94]:
-
-
-import cv2
-from matplotlib import pyplot as plt
-
-contours = []
 
 def captch_ex(img, img2gray):
-#     img = cv2.imread(file_name)
-
-#     img_final = cv2.imread(file_name)
     img_final = img.copy()
-#     img2gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#     img2gray = img.copy()
     ret, mask = cv2.threshold(img2gray, 180, 255, cv2.THRESH_BINARY)
     image_final = cv2.bitwise_and(img2gray, img2gray, mask=mask)
     ret, new_img = cv2.threshold(image_final, 180, 255, cv2.THRESH_BINARY)  # for black text , cv.THRESH_BINARY_INV
@@ -107,30 +89,33 @@ def captch_ex(img, img2gray):
     
 
 
+def solve(file_name):
 
-# In[96]:
+    img = cv2.imread('./Dataset/' + file_name)
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    img_ = img.copy()
 
-
-dst = gray.copy()
-for k in range(0, 14):
-    print k
-    for i in range(gray.shape[0]):
-        for j in range(gray.shape[1]):
-            if (gray[i][j] < (k + 1) * 20 and gray[i][j] >= k * 20):
-                dst[i][j] = 255
-            else:
-                dst[i][j] = 0
-#     findEdge(dst)
+    dst = gray.copy()
+    contours = []
+    for k in range(0, 14):
+        print k
+        for i in range(gray.shape[0]):
+            for j in range(gray.shape[1]):
+                if (gray[i][j] < (k + 1) * 20 and gray[i][j] >= k * 20):
+                    dst[i][j] = 255
+                else:
+                    dst[i][j] = 0
+    #     findEdge(dst)
+        
+        contours += captch_ex(img, dst)
     
-    contours += captch_ex(img, dst)
     
-    
-for contour in contours:
+    for contour in contours:
         # get rectangle bounding contour
         [x, y, w, h] = cv2.boundingRect(contour)
 
         # Don't plot small false positives that aren't text
-        if w < 30 or h < 30:
+        if w < 50 or h < 50:
             continue
 
         # draw rectangle around contour on original image
@@ -145,8 +130,13 @@ for contour in contours:
         index = index + 1
 
         '''
-    # write original image with added contours to disk
-    
-plt.subplot(1,1,1), plt.imshow(img)
-plt.show()
+    cv2.imwrite("./Result1/" + file_name, img, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
 
+import os 
+list_exist = os.listdir('./Result/');
+for fn in os.listdir('./Dataset/'):
+    if (fn in list_exist):
+        print fn + ' is exist'
+        continue
+    print fn
+    solve(fn)
